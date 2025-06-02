@@ -1,12 +1,11 @@
 # strategies/seed_160k.py
 
-from .base_strategy import BaseStrategy
 import pandas as pd
 
-class Seed160kStrategy(BaseStrategy):
+class Seed160kStrategy:
     def __init__(self, capital=160_000):
         self.capital = capital
-        self.position_size = capital * 0.08  # 8% 진입
+        self.position_size = capital * 0.08
         self.stop_loss_pct = 0.05
         self.take_profit_pct = 0.15
 
@@ -14,6 +13,7 @@ class Seed160kStrategy(BaseStrategy):
         return "seed_160k_macd_fgi"
 
     def generate_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+        print("[DEBUG] Seed160kStrategy 실행 시작")
         df = df.copy()
         df['buy'] = False
         df['sell'] = False
@@ -28,19 +28,17 @@ class Seed160kStrategy(BaseStrategy):
             fgi = df.loc[i, 'fgi']
             price = df.loc[i, 'close']
 
-            # 진입 조건
             if not in_position and macd_now > signal_now and macd_prev <= signal_prev and fgi < 25:
                 df.loc[i, 'buy'] = True
                 entry_price = price
                 in_position = True
 
-            # 청산 조건
             elif in_position:
                 if price <= entry_price * (1 - self.stop_loss_pct):
-                    df.loc[i, 'sell'] = True  # 손절
+                    df.loc[i, 'sell'] = True
                     in_position = False
                 elif price >= entry_price * (1 + self.take_profit_pct):
-                    df.loc[i, 'sell'] = True  # 익절
+                    df.loc[i, 'sell'] = True
                     in_position = False
 
         return df
