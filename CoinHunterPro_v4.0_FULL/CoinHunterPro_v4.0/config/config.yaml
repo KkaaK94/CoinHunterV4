@@ -1,59 +1,32 @@
-tickers:
-  - BTC
-  - ETH
-  - BNB
-  - XRP
-  - ADA
-  - DOGE
-  - SOL
-  - DOT
+strategy_params:
+  RSI:
+    entry_threshold: 30
+    exit_threshold: 70
+    period: 14
+    amount_precision: 6
 
-strategies:
-  BTC:
-    name: "RSIStrategy"
-    params:
-      rsi_length: 14
-      rsi_buy: 30
-      rsi_sell: 70
-  ETH:
-    name: "RSIStrategy"
-    params:
-      rsi_length: 14
-      rsi_buy: 30
-      rsi_sell: 70
-  BNB:
-    name: "RSIStrategy"
-    params:
-      rsi_length: 14
-      rsi_buy: 30
-      rsi_sell: 70
-  XRP:
-    name: "RSIStrategy"
-    params:
-      rsi_length: 14
-      rsi_buy: 30
-      rsi_sell: 70
-  ADA:
-    name: "RSIStrategy"
-    params:
-      rsi_length: 14
-      rsi_buy: 30
-      rsi_sell: 70
-  DOGE:
-    name: "RSIStrategy"
-    params:
-      rsi_length: 14
-      rsi_buy: 30
-      rsi_sell: 70
-  SOL:
-    name: "RSIStrategy"
-    params:
-      rsi_length: 14
-      rsi_buy: 30
-      rsi_sell: 70
-  DOT:
-    name: "RSIStrategy"
-    params:
-      rsi_length: 14
-      rsi_buy: 30
-      rsi_sell: 70
+  MACD:
+    short_window: 12
+    long_window: 26
+    signal_window: 9
+    amount_precision: 6
+
+assignments:
+  KRW-BTC: RSI
+  KRW-ETH: MACD
+  KRW-BNB: RSI
+  KRW-XRP: RSI
+  KRW-ADA: MACD
+  KRW-DOGE: RSI
+  KRW-SOL: RSI
+  KRW-DOT: MACD
+
+capital:
+  KRW-BTC: 1500000
+  KRW-ETH: 1000000
+  KRW-BNB: 800000
+  KRW-XRP: 800000
+  KRW-ADA: 600000
+  KRW-DOGE: 500000
+  KRW-SOL: 700000
+  KRW-DOT: 600000
