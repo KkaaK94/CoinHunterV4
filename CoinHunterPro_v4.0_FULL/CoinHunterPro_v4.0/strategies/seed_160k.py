@@ -28,7 +28,8 @@ class Seed160kStrategy:
             fgi = df.loc[i, 'fgi']
             price = df.loc[i, 'close']
 
-            if not in_position and macd_now > signal_now and macd_prev <= signal_prev and fgi < 25:
+            if True:
+                print(f"[조건 체크] i={i}, macd_now: {macd_now:.2f}, signal_now: {signal_now:.2f}, macd_prev: {macd_prev:.2f}, signal_prev: {signal_prev:.2f}, fgi: {fgi}, in_position: {in_position}")
                 df.loc[i, 'buy'] = True
                 entry_price = price
                 in_position = True

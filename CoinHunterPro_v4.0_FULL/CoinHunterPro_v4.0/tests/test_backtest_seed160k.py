@@ -2,10 +2,12 @@
 
 import os
 import sys
+import pandas as pd  # ← 반드시 추가하세요!
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from strategies.seed_160k import Seed160kStrategy
 from app_core.analytics.backtester import Backtester
+
 
 def run_backtest_for_file(filepath):
     try:
