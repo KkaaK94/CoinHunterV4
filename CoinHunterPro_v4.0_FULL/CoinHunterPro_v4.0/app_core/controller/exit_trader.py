@@ -1,5 +1,3 @@
-# exit_trader.py
-
 from datetime import datetime
 from utils.logger import log_message, log_to_trade_json, log_position_status
 from utils.json_manager import load_position, update_exit
@@ -30,37 +28,28 @@ def execute_exit(ticker: str, strategy: object, exchange: ExchangeAPI) -> bool:
         pnl = (current_price - entry_price) * amount
         pnl_pct = ((current_price - entry_price) / entry_price) * 100
 
+        # ✅ 로그 저장
+        trade_log = {
+            "timestamp": now,
+            "ticker": ticker,
+            "side": "sell",
+            "price": current_price,
+            "entry_price": entry_price,
+            "amount": amount,
+            "strategy": strategy_name,
+            "status": "exited",
+            "pnl": round(pnl, 2),
+            "pnl_pct": round(pnl_pct, 2),
+            "mode": mode
+        }
+
         if exchange.is_live:
-            order_result = exchange.place_order(ticker, "sell", amount)
-            log_to_trade_json(ticker, {
-                "event": "exit",
-                "time": now,
-                "ticker": ticker,
-                "entry_price": entry_price,
-                "exit_price": current_price,
-                "amount": amount,
-                "pnl": pnl,
-                "pnl_pct": pnl_pct,
-                "strategy": strategy_name,
-                "mode": "live",
-                "order": order_result
-            })
-        else:
-            log_to_trade_json(ticker, {
-                "event": "exit",
-                "time": now,
-                "ticker": ticker,
-                "entry_price": entry_price,
-                "exit_price": current_price,
-                "amount": amount,
-                "pnl": pnl,
-                "pnl_pct": pnl_pct,
-                "strategy": strategy_name,
-                "mode": "paper"
-            })
+            trade_log["order"] = exchange.place_order(ticker, "sell", amount)
+
+        log_to_trade_json(ticker, trade_log)
 
         update_exit(ticker, current_price, pnl)
-        log_position_status({**position, "exit_price": current_price, "status": "CLOSED"})  # 실시간 저장
+        log_position_status({**position, "exit_price": current_price, "status": "CLOSED"})
         log_message(f"[청산완료] {ticker} @ {current_price:,.0f}₩ / 수익: {pnl:,.0f}₩ ({pnl_pct:.2f}%) / 전략: {strategy_name}")
         return True
 

@@ -1,6 +1,5 @@
-
 from datetime import datetime
-from utils.logger import log_message, log_position_status
+from utils.logger import log_message, log_position_status, log_to_trade_json
 from data_io.json_store.position_manager import save_position
 
 def try_enter_position(ticker, strategy, current_price):
@@ -29,8 +28,20 @@ def try_enter_position(ticker, strategy, current_price):
             }
 
             save_position(ticker, position)
-            log_position_status(position)  # 실시간 저장
+            log_position_status(position)
             log_message(f"[진입] {ticker} 진입 완료 @ {current_price:,.0f}₩ / 수량: {amount}개 / 전략: {strategy.name}")
+
+            # ✅ trade 로그 추가
+            log_to_trade_json(ticker, {
+                "timestamp": now,
+                "ticker": ticker,
+                "side": "buy",
+                "price": current_price,
+                "amount": amount,
+                "strategy": strategy.name,
+                "status": "entered"
+            })
+
             return True
         else:
             log_message(f"[진입 실패] {ticker}: {strategy.name} 조건 미충족")
