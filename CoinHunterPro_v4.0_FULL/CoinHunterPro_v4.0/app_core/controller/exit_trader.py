@@ -1,7 +1,7 @@
-# app_core/controller/exit_trader.py
+# exit_trader.py
 
 from datetime import datetime
-from utils.logger import log_message, log_to_trade_json
+from utils.logger import log_message, log_to_trade_json, log_position_status
 from utils.json_manager import load_position, update_exit
 from utils.exchange_api import ExchangeAPI
 
@@ -60,6 +60,7 @@ def execute_exit(ticker: str, strategy: object, exchange: ExchangeAPI) -> bool:
             })
 
         update_exit(ticker, current_price, pnl)
+        log_position_status({**position, "exit_price": current_price, "status": "CLOSED"})  # 실시간 저장
         log_message(f"[청산완료] {ticker} @ {current_price:,.0f}₩ / 수익: {pnl:,.0f}₩ ({pnl_pct:.2f}%) / 전략: {strategy_name}")
         return True
 

@@ -1,0 +1,25 @@
+{
+  "timestamp": "2025-06-03T10:57:28.559746",
+  "total_capital": 10000000.0,
+  "allocation_method": "threshold_0.05",
+  "strategies": [
+    {
+      "name": "RSI",
+      "score": 0.71,
+      "weight": 0.3817,
+      "capital_allocated": 3817204.3
+    },
+    {
+      "name": "MACD",
+      "score": 0.63,
+      "weight": 0.3387,
+      "capital_allocated": 3387096.77
+    },
+    {
+      "name": "MA_Cross",
+      "score": 0.52,
+      "weight": 0.2796,
+      "capital_allocated": 2795698.92
+    }
+  ]
+}
