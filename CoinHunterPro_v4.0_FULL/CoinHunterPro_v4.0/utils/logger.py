@@ -35,3 +35,9 @@ def log_to_trade_db(log, db_name="coinhunter", collection="trades"):
         db[collection].insert_one(log)
     except Exception as e:
         print(f"[DB 로그 실패] {e}")
+
+def log_message(message, extra=None):
+    time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{time_str}] {message}")
+    if extra:
+        print(f" └▶ {extra}")

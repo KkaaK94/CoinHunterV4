@@ -1,36 +1,37 @@
-# strategies/rsi.py
-
 import pandas as pd
 import numpy as np
-import json
-import os
 from strategies.base_strategy import BaseStrategy
 from utils.logger import log_to_trade_json
 
 
 class RsiStrategy(BaseStrategy):
-    def __init__(self, name="RSI", capital_dict=None, params=None, amount_precision=6):
-        if capital_dict is None:
-            capital_dict = {}
+    name = "RSI"
+
+    def __init__(self, params=None, capital=1000000, precision=6):
         if params is None:
             params = {"entry_threshold": 30, "exit_threshold": 70, "period": 14}
-        super().__init__(name, capital_dict, params, amount_precision)
+        super().__init__(params=params, capital=capital, precision=precision)
 
-        # 추가 상태값
         self.rsi_cache = {}
         self.entry_count = {}
         self.exit_count = {}
         self.rsi_history = {}
 
-    def _calculate_rsi(self, ticker, price):
+
+
+    def init_state(self, ticker):
         if ticker not in self.state:
             self.state[ticker] = {"closes": [], "last_signal": None, "rsi": None}
             self.rsi_history[ticker] = []
 
+    def update_price_series(self, ticker, price):
+        self.init_state(ticker)
         self.state[ticker]["closes"].append(price)
-        closes = self.state[ticker]["closes"]
 
+    def _calculate_rsi(self, ticker):
+        closes = self.state[ticker]["closes"]
         period = self.params["period"]
+
         if len(closes) < period + 1:
             return None
 
@@ -50,7 +51,8 @@ class RsiStrategy(BaseStrategy):
         return rsi
 
     def should_enter(self, ticker, current_price):
-        rsi = self._calculate_rsi(ticker, current_price)
+        self.update_price_series(ticker, current_price)
+        rsi = self._calculate_rsi(ticker)
         if rsi is None:
             return False
 
@@ -72,7 +74,8 @@ class RsiStrategy(BaseStrategy):
         return False
 
     def should_exit(self, ticker, current_price):
-        rsi = self._calculate_rsi(ticker, current_price)
+        self.update_price_series(ticker, current_price)
+        rsi = self._calculate_rsi(ticker)
         if rsi is None:
             return False
 

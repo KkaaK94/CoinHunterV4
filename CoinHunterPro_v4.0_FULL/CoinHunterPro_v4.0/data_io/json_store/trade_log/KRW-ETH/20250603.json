@@ -1,0 +1,147 @@
+[
+  {
+    "event": "entry_signal",
+    "macd": 6.655009232897406,
+    "signal": 6.596740316923013,
+    "entry_price": "50",
+    "strategy": {
+      "short_window": 12,
+      "long_window": 26,
+      "signal_window": 9
+    }
+  },
+  {
+    "event": "exit_signal",
+    "macd": 6.5331891346162365,
+    "signal": 6.584030080461658,
+    "exit_price": "50",
+    "strategy": {
+      "short_window": 12,
+      "long_window": 26,
+      "signal_window": 9
+    },
+    "holding_period_sec": 0
+  },
+  {
+    "event": "entry_signal",
+    "macd": 6.655009232897406,
+    "signal": 6.596740316923013,
+    "entry_price": "50",
+    "strategy": {
+      "short_window": 12,
+      "long_window": 26,
+      "signal_window": 9
+    }
+  },
+  {
+    "event": "exit_signal",
+    "macd": 6.5331891346162365,
+    "signal": 6.584030080461658,
+    "exit_price": "50",
+    "strategy": {
+      "short_window": 12,
+      "long_window": 26,
+      "signal_window": 9
+    },
+    "holding_period_sec": 0
+  },
+  {
+    "event": "entry_signal",
+    "macd": 6.655009232897406,
+    "signal": 6.596740316923013,
+    "entry_price": "50",
+    "strategy": {
+      "short_window": 12,
+      "long_window": 26,
+      "signal_window": 9
+    }
+  },
+  {
+    "event": "exit_signal",
+    "macd": 6.5331891346162365,
+    "signal": 6.584030080461658,
+    "exit_price": "50",
+    "strategy": {
+      "short_window": 12,
+      "long_window": 26,
+      "signal_window": 9
+    },
+    "holding_period_sec": 0
+  },
+  {
+    "event": "entry_signal",
+    "macd": 6.655009232897406,
+    "signal": 6.596740316923013,
+    "entry_price": "50",
+    "strategy": {
+      "short_window": 12,
+      "long_window": 26,
+      "signal_window": 9
+    }
+  },
+  {
+    "event": "exit_signal",
+    "macd": 6.5331891346162365,
+    "signal": 6.584030080461658,
+    "exit_price": "50",
+    "strategy": {
+      "short_window": 12,
+      "long_window": 26,
+      "signal_window": 9
+    },
+    "holding_period_sec": 0
+  },
+  {
+    "event": "entry_signal",
+    "macd": 6.655009232897406,
+    "signal": 6.596740316923013,
+    "entry_price": "50",
+    "strategy": {
+      "short_window": 12,
+      "long_window": 26,
+      "signal_window": 9
+    }
+  },
+  {
+    "event": "exit_signal",
+    "macd": 6.5331891346162365,
+    "signal": 6.584030080461658,
+    "exit_price": "50",
+    "strategy": {
+      "short_window": 12,
+      "long_window": 26,
+      "signal_window": 9
+    },
+    "holding_period_sec": 0
+  },
+  {
+    "event": "entry_signal",
+    "macd": 6.655009232897406,
+    "signal": 6.596740316923013,
+    "entry_price": "50",
+    "strategy": "MACD"
+  },
+  {
+    "event": "exit_signal",
+    "macd": 6.5331891346162365,
+    "signal": 6.584030080461658,
+    "exit_price": "50",
+    "strategy": "MACD",
+    "holding_period_sec": 0
+  },
+  {
+    "event": "entry_signal",
+    "macd": 6.655009232897406,
+    "signal": 6.596740316923013,
+    "entry_price": "50",
+    "strategy": "MACD"
+  },
+  {
+    "event": "exit_signal",
+    "macd": 6.5331891346162365,
+    "signal": 6.584030080461658,
+    "exit_price": "50",
+    "strategy": "MACD",
+    "holding_period_sec": 0
+  }
+]

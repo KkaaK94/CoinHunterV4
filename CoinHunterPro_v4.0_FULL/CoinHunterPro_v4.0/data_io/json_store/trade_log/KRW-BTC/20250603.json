@@ -1,0 +1,16 @@
+[
+  {
+    "action": "exit",
+    "price": "50",
+    "rsi": 100.0,
+    "exit_count": 1,
+    "strategy": "RSI"
+  },
+  {
+    "action": "exit",
+    "price": "50",
+    "rsi": 100.0,
+    "exit_count": 1,
+    "strategy": "RSI"
+  }
+]

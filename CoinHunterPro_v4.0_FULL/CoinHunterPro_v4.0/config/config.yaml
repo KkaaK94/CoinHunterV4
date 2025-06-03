@@ -1,4 +1,5 @@
-strategy_params:
+# 전략별 기본 설정값
+strategy:
   RSI:
     entry_threshold: 30
     exit_threshold: 70
@@ -11,22 +12,38 @@ strategy_params:
     signal_window: 9
     amount_precision: 6
 
+  MA_CROSS:
+    short_window: 5
+    long_window: 20
+    amount_precision: 6
+
+# 티커별 전략 매핑 및 자본 설정
 assignments:
   KRW-BTC: RSI
   KRW-ETH: MACD
   KRW-BNB: RSI
-  KRW-XRP: RSI
-  KRW-ADA: MACD
-  KRW-DOGE: RSI
-  KRW-SOL: RSI
-  KRW-DOT: MACD
+  KRW-XRP: MA_CROSS
+  KRW-ADA: RSI
+  KRW-DOGE: MACD
+  KRW-SOL: MA_CROSS
+  KRW-DOT: RSI
 
 capital:
   KRW-BTC: 1500000
-  KRW-ETH: 1000000
-  KRW-BNB: 800000
-  KRW-XRP: 800000
-  KRW-ADA: 600000
-  KRW-DOGE: 500000
-  KRW-SOL: 700000
-  KRW-DOT: 600000
+  KRW-ETH: 800000
+  KRW-BNB: 700000
+  KRW-XRP: 500000
+  KRW-ADA: 400000
+  KRW-DOGE: 400000
+  KRW-SOL: 300000
+  KRW-DOT: 300000
+
+precision:
+  KRW-BTC: 6
+  KRW-ETH: 5
+  KRW-BNB: 4
+  KRW-XRP: 2
+  KRW-ADA: 2
+  KRW-DOGE: 2
+  KRW-SOL: 4
+  KRW-DOT: 2
