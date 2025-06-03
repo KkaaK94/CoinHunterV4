@@ -1,3 +1,5 @@
+# exit_trader.py
+
 from datetime import datetime
 from utils.logger import log_message, log_to_trade_json, log_position_status
 from utils.json_manager import load_position, update_exit

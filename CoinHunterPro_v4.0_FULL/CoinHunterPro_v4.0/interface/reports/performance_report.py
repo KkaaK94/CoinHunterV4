@@ -17,6 +17,8 @@ def calculate_win_rate(win_trades, total_trades):
 
 def plot_strategy_performance(metrics: dict) -> str:
     strategy_names = list(metrics.keys())
+
+    # Plotly 그래프
     fig = go.Figure()
     fig.add_trace(go.Bar(x=strategy_names, y=[metrics[k]["total_return"] for k in strategy_names], name="수익률", marker_color='green'))
     fig.add_trace(go.Bar(x=strategy_names, y=[metrics[k]["mdd"] for k in strategy_names], name="MDD", marker_color='red'))
