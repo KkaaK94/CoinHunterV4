@@ -1,60 +1,47 @@
-# exit_trader.py
+# app_core/controller/exit_trader.py
 
+from loguru import logger
+from utils.json_manager import save_json
+from data_io.json_store.position_log import PositionManager
 from datetime import datetime
-from utils.logger import log_message, log_to_trade_json, log_position_status
-from utils.json_manager import load_position, update_exit
-from utils.exchange_api import ExchangeAPI
+import os
 
-def execute_exit(ticker: str, strategy: object, exchange: ExchangeAPI) -> bool:
-    try:
-        position = load_position(ticker)
-        if not position or position.get("status") != "HOLD":
-            log_message(f"[청산스킵] {ticker} 포지션 없음 또는 상태 비활성", level="debug")
-            return False
+from strategies import rsi, macd, ma_cross
 
-        current_price = exchange.get_current_price(ticker)
-        if current_price == 0:
-            log_message(f"[가격조회실패] {ticker} 현재 가격을 가져올 수 없음", level="error")
-            return False
-
-        if not strategy.should_exit(ticker, current_price):
-            log_message(f"[청산실패] {ticker} 전략 조건 미충족", level="debug")
-            return False
-
-        amount = position["amount"]
-        entry_price = position["entry_price"]
-        strategy_name = position.get("strategy", strategy.name)
-        mode = position.get("mode", "paper")
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        pnl = (current_price - entry_price) * amount
-        pnl_pct = ((current_price - entry_price) / entry_price) * 100
-
-        # ✅ 로그 저장
-        trade_log = {
-            "timestamp": now,
-            "ticker": ticker,
-            "side": "sell",
-            "price": current_price,
-            "entry_price": entry_price,
-            "amount": amount,
-            "strategy": strategy_name,
-            "status": "exited",
-            "pnl": round(pnl, 2),
-            "pnl_pct": round(pnl_pct, 2),
-            "mode": mode
+class ExitTrader:
+    def __init__(self):
+        self.strategies = {
+            "RSI": rsi.RSIStrategy(),
+            "MACD": macd.MACDStrategy(),
+            "MA_CROSS": ma_cross.MACrossStrategy()
         }
+        self.position_manager = PositionManager()
 
-        if exchange.is_live:
-            trade_log["order"] = exchange.place_order(ticker, "sell", amount)
+    def get_log_path(self, symbol):
+        date_str = datetime.now().strftime("%Y%m%d")
+        os.makedirs(f"data_io/json_store/exit_logs/{date_str}", exist_ok=True)
+        return f"data_io/json_store/exit_logs/{date_str}/{symbol}.json"
 
-        log_to_trade_json(ticker, trade_log)
+    def check(self):
+        logger.info("📤 [Exit] 현재 포지션 청산 조건 확인 중...")
+        positions = self.position_manager.get_open_positions()
 
-        update_exit(ticker, current_price, pnl)
-        log_position_status({**position, "exit_price": current_price, "status": "CLOSED"})
-        log_message(f"[청산완료] {ticker} @ {current_price:,.0f}₩ / 수익: {pnl:,.0f}₩ ({pnl_pct:.2f}%) / 전략: {strategy_name}")
-        return True
+        for pos in positions:
+            symbol = pos.get("symbol")
+            strategy_name = pos.get("strategy")
+            strategy = self.strategies.get(strategy_name)
 
-    except Exception as e:
-        log_message(f"[오류] {ticker} 청산 실패: {e}", level="error")
-        return False
+            if not strategy:
+                logger.warning(f"⚠️ 미등록 전략: {strategy_name} → 스킵")
+                continue
+
+            try:
+                should_exit = strategy.should_exit_position(symbol=symbol)
+                if should_exit.get("exit"):
+                    logger.success(f"💰 [{strategy_name}] {symbol} 청산 조건 만족")
+                    self.position_manager.close_position(symbol)
+                    save_json(self.get_log_path(symbol), should_exit)
+                else:
+                    logger.debug(f"🔒 [{strategy_name}] {symbol} 청산 조건 미충족")
+            except Exception as e:
+                logger.error(f"❌ [{strategy_name}] {symbol} 청산 실패: {e}")

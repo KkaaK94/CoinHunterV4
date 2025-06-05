@@ -1,53 +1,61 @@
+# app_core/controller/entry_trigger.py
 
+from loguru import logger
+from utils.json_manager import save_json
+from data_io.json_store.position_log import PositionManager
 from datetime import datetime
-from utils.logger import log_message, log_position_status, log_to_trade_json
-from data_io.json_store.position_manager import save_position
+import os
+import pyupbit
 
-def try_enter_position(ticker, strategy, current_price):
-    """
-    진입 조건을 판단하여 포지션 진입
-    """
-    try:
-        if strategy.should_enter(ticker, current_price):
-            capital = strategy.capital_dict.get(ticker, getattr(strategy, "capital", 10000))
-            precision = getattr(strategy, "amount_precision", 6)
+from strategies import rsi, macd, ma_cross
 
-            if capital < 1000:
-                log_message(f"[진입 실패] {ticker}: 자본 부족 (현재 자본: {capital})")
-                return False
+class EntrySignalChecker:
+    def __init__(self):
+        self.primary_strategies = {
+            "RSI": rsi.RSIStrategy(),
+            "MACD": macd.MACDStrategy(),
+            "MA_CROSS": ma_cross.MACrossStrategy()
+        }
+        self.backup_strategy = macd.MACDStrategy()  # 예시: fallback 전략
+        self.position_manager = PositionManager()
 
-            amount = round(capital / current_price, precision)
-            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    def is_valid_symbol(self, symbol):
+        try:
+            price = pyupbit.get_current_price(symbol)
+            return price is not None
+        except:
+            return False
 
-            position = {
-                "ticker": ticker,
-                "entry_price": current_price,
-                "amount": amount,
-                "entry_time": now,
-                "status": "HOLD",
-                "strategy": strategy.name
-            }
+    def get_log_path(self, symbol):
+        date_str = datetime.now().strftime("%Y%m%d")
+        os.makedirs(f"data_io/json_store/entry_logs/{date_str}", exist_ok=True)
+        return f"data_io/json_store/entry_logs/{date_str}/{symbol}.json"
 
-            save_position(ticker, position)
-            log_position_status(position)
-            log_message(f"[진입] {ticker} 진입 완료 @ {current_price:,.0f}₩ / 수량: {amount}개 / 전략: {strategy.name}")
+    def check(self):
+        logger.info("🚀 [Entry] 전략별 진입 시그널 확인 중...")
+        for name, strategy in self.primary_strategies.items():
+            try:
+                signal = strategy.should_enter_position()
+                if not signal.get("symbol") or not self.is_valid_symbol(signal.get("symbol")):
+                    logger.warning(f"⚠️ [{name}] 심볼 유효성 실패: {signal.get('symbol')}")
+                    continue
 
-            # ✅ trade 로그 추가
-            log_to_trade_json(ticker, {
-                "timestamp": now,
-                "ticker": ticker,
-                "side": "buy",
-                "price": current_price,
-                "amount": amount,
-                "strategy": strategy.name,
-                "status": "entered"
-            })
-
-            return True
-        else:
-            log_message(f"[진입 실패] {ticker}: {strategy.name} 조건 미충족")
-
-    except Exception as e:
-        log_message(f"[진입 오류] {ticker}: {e}")
-
-    return False
+                if signal.get("enter"):
+                    symbol = signal.get("symbol")
+                    logger.success(f"✅ [{name}] {symbol} 진입 조건 만족")
+                    self.position_manager.open_position(symbol, name)
+                    save_json(self.get_log_path(symbol), signal)
+                else:
+                    logger.debug(f"⛔ [{name}] 조건 미충족")
+            except Exception as e:
+                logger.error(f"❌ [{name}] 진입 시그널 실패: {e}")
+                # 백업 전략 fallback 시도
+                try:
+                    backup_signal = self.backup_strategy.should_enter_position()
+                    if backup_signal.get("enter") and self.is_valid_symbol(backup_signal.get("symbol")):
+                        symbol = backup_signal.get("symbol")
+                        logger.success(f"🔁 백업 전략 진입: {symbol}")
+                        self.position_manager.open_position(symbol, "MACD (Fallback)")
+                        save_json(self.get_log_path(symbol), backup_signal)
+                except Exception as be:
+                    logger.error(f"⚠️ 백업 전략도 실패: {be}")

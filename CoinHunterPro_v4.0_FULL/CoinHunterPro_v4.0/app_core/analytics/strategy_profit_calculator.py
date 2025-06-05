@@ -1,100 +1,71 @@
 # app_core/analytics/strategy_profit_calculator.py
 
 import os
-import pandas as pd
-import numpy as np
-from datetime import datetime
 import json
+from datetime import datetime
+from utils.json_manager import load_json
+from config import config
 
-from interface.reports.performance_report import generate_performance_report
+def calculate_strategy_profits(log_dir=None):
+    if not log_dir:
+        log_dir = config.get("strategy_log_dir", "data_io/json_store/trade_log")
 
-def calculate_profit(trade_logs: list[dict]) -> dict:
-    trades = []
-    entry = None
+    roi_filter = config.get("roi_filter", 0.0)
+    strategy_name_filter = config.get("strategy_name_filter", [])
 
-    for log in trade_logs:
-        if log.get("event") == "entry_signal":
-            entry = {
-                "entry_price": log.get("entry_price"),
-                "entry_time": log.get("timestamp") or log.get("time") or datetime.now().isoformat()
-            }
-        elif log.get("event") == "exit_signal" and entry:
-            exit_price = log.get("exit_price")
-            exit_time = log.get("timestamp") or log.get("time") or datetime.now().isoformat()
+    scores = []
+    if not os.path.exists(log_dir):
+        return scores
 
-            pnl = (exit_price - entry["entry_price"]) / entry["entry_price"]
-            duration = (pd.to_datetime(exit_time) - pd.to_datetime(entry["entry_time"])).total_seconds()
+    for date_folder in sorted(os.listdir(log_dir)):
+        folder_path = os.path.join(log_dir, date_folder)
+        if not os.path.isdir(folder_path):
+            continue
 
-            trades.append({
-                "entry_price": entry["entry_price"],
-                "exit_price": exit_price,
-                "pnl": pnl,
-                "duration_sec": duration
-            })
+        for filename in os.listdir(folder_path):
+            filepath = os.path.join(folder_path, filename)
+            with open(filepath, "r") as f:
+                trades = json.load(f)
 
-            entry = None  # reset
+            strategy_data = {}
+            for trade in trades:
+                name = trade.get("strategy_name")
+                roi = trade.get("roi", 0)
+                profit = trade.get("profit", 0)
+                win = trade.get("win", False)
 
-    df = pd.DataFrame(trades)
+                if not name or (strategy_name_filter and name not in strategy_name_filter):
+                    continue
 
-    if df.empty:
-        return {
-            "total_return": 0.0,
-            "mdd": 0.0,
-            "sharpe": 0.0,
-            "avg_holding_sec": 0.0,
-            "trade_count": 0,
-            "win_trades": 0
-        }
+                if name not in strategy_data:
+                    strategy_data[name] = {
+                        "total_roi": 0,
+                        "total_profit": 0,
+                        "win_count": 0,
+                        "total_count": 0
+                    }
 
-    df["cumulative_return"] = (1 + df["pnl"]).cumprod()
-    peak = df["cumulative_return"].cummax()
-    drawdown = (df["cumulative_return"] - peak) / peak
-    mdd = drawdown.min()
+                s = strategy_data[name]
+                s["total_roi"] += roi
+                s["total_profit"] += profit
+                s["win_count"] += 1 if win else 0
+                s["total_count"] += 1
 
-    sharpe = df["pnl"].mean() / df["pnl"].std() * np.sqrt(252) if df["pnl"].std() != 0 else 0
-    win_trades = (df["pnl"] > 0).sum()
+            for name, data in strategy_data.items():
+                if data["total_count"] == 0:
+                    continue
+                avg_roi = data["total_roi"] / data["total_count"]
+                win_rate = (data["win_count"] / data["total_count"]) * 100
 
-    return {
-        "total_return": round(df["cumulative_return"].iloc[-1] - 1, 4),
-        "mdd": round(mdd, 4),
-        "sharpe": round(sharpe, 4),
-        "avg_holding_sec": round(df["duration_sec"].mean(), 2),
-        "trade_count": len(df),
-        "win_trades": int(win_trades)
-    }
+                if avg_roi < roi_filter:
+                    continue
 
+                scores.append({
+                    "strategy_name": name,
+                    "roi": round(avg_roi, 2),
+                    "profit": round(data["total_profit"], 2),
+                    "win_rate": round(win_rate, 2),
+                    "total_count": data["total_count"]
+                })
 
-def calculate_strategy_profits(strategy_log_dir: str = "data_io/json_store/strategy_logs") -> dict:
-    """
-    전략별 JSON 로그 디렉토리를 스캔하여 성과를 계산합니다.
-    """
-    metrics = {}
-
-    for filename in os.listdir(strategy_log_dir):
-        if filename.endswith(".json"):
-            strategy_name = filename.replace(".json", "")
-            filepath = os.path.join(strategy_log_dir, filename)
-            try:
-                with open(filepath, "r") as f:
-                    logs = json.load(f)
-                metrics[strategy_name] = calculate_profit(logs)
-            except Exception as e:
-                print(f"[오류] {strategy_name} 처리 중 실패: {e}")
-
-    return metrics
-
-
-def finalize_profit_report():
-    """
-    전략 수익률 계산 후 HTML + PDF 리포트 자동 저장
-    """
-    metrics = calculate_strategy_profits()
-    generate_performance_report(
-        metrics,
-        output_path="interface/reports/strategy_report.html",
-        pdf_output_path="interface/reports/strategy_report.pdf"
-    )
-
-
-if __name__ == "__main__":
-    finalize_profit_report()
+    return sorted(scores, key=lambda x: x["roi"], reverse=True)

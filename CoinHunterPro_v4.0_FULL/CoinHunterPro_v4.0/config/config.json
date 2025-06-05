@@ -1,0 +1,34 @@
+{
+  "loop_interval_sec": 180,
+  "lock_file": "runtime/scheduler.lock",
+  "health_file": "runtime/healthcheck.json",
+  "terminate_file": "runtime/terminate.flag",
+
+  "strategy_log_dir": "data_io/json_store/trade_log",
+  "position_log_path": "data_io/json_store/position_log.json",
+  "score_file_path": "data_io/json_store/strategy_scores.json",
+
+  "report_html_path": "interface/reports/strategy_report.html",
+  "report_pdf_path": "interface/reports/strategy_report.pdf",
+  "report_meta_file": "interface/reports/report_meta.json",
+
+  "alert_enabled": true,
+  "stop_on_error": false,
+
+  "strategy_name_filter": [],
+  "strategy_roi_filter": 1.5,
+  "report_top_n": 5,
+  "min_trade_count": 5,
+
+  "plot_image_path": "interface/reports/top_strategies.png",
+
+  "json_store_path": "data_io/json_store",
+  "log_path": "logs",
+  "entry_log_dir": "data_io/json_store/entry_logs",
+  "exit_log_dir": "data_io/json_store/exit_logs",
+
+  "enable_secure_json": false,
+  "json_encryption_key": "",
+
+  "dashboard_mode": "dash"
+}
