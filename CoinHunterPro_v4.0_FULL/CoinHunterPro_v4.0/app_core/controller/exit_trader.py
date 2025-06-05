@@ -1,5 +1,6 @@
 # app_core/controller/exit_trader.py
 
+from utils import exchange_api
 from loguru import logger
 from utils.json_manager import save_json
 from data_io.json_store.position_log import PositionManager
@@ -39,6 +40,11 @@ class ExitTrader:
                 should_exit = strategy.should_exit_position(symbol=symbol)
                 if should_exit.get("exit"):
                     logger.success(f"💰 [{strategy_name}] {symbol} 청산 조건 만족")
+
+                    # ✅ 실매도 연동
+                    balance = exchange_api.get_balance(symbol.split("-")[1])
+                    result = exchange_api.place_market_sell(symbol, balance)
+
                     self.position_manager.close_position(symbol)
                     save_json(self.get_log_path(symbol), should_exit)
                 else:

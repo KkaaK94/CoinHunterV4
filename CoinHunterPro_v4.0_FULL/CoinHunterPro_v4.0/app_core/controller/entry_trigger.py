@@ -1,5 +1,6 @@
 # app_core/controller/entry_trigger.py
 
+from utils import exchange_api
 from loguru import logger
 from utils.json_manager import save_json
 from data_io.json_store.position_log import PositionManager
@@ -43,6 +44,14 @@ class EntrySignalChecker:
                 if signal.get("enter"):
                     symbol = signal.get("symbol")
                     logger.success(f"✅ [{name}] {symbol} 진입 조건 만족")
+
+                    # ✅ 실매매 연동
+                    price = exchange_api.get_current_price(symbol)
+                    balance = exchange_api.get_balance("KRW")
+                    trade_amount = balance * 0.1  # (예시) 10% 사용
+
+                    result = exchange_api.place_market_buy(symbol, trade_amount)
+
                     self.position_manager.open_position(symbol, name)
                     save_json(self.get_log_path(symbol), signal)
                 else:

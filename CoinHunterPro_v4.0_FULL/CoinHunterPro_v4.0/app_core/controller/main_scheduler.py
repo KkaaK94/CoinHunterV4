@@ -3,10 +3,10 @@
 import os
 import time
 import argparse
-import psutil
 import traceback
 from datetime import datetime
 
+from utils import termination_handler
 from utils.logger import logger
 from utils.json_manager import load_json, save_json
 from app_core.analytics.strategy_profit_calculator import calculate_strategy_profits
@@ -14,6 +14,7 @@ from interface.reports.performance_report import generate_performance_report
 from utils.notifier import send_alert
 from app_core.controller.entry_trigger import EntrySignalChecker
 from app_core.controller.exit_trader import ExitTrader
+from app_core.infra_control.capital_allocator import allocate_capital_weights  # ✅ 자본 배분 로직 연동
 
 # 설정 파일 로드
 CONFIG = load_json("config/config.json")
@@ -30,44 +31,22 @@ ALERT_ENABLED = CONFIG.get("alert_enabled", True)
 ROI_FILTER = CONFIG.get("roi_filter", 0.5)
 INCLUDE_STRATEGIES = CONFIG.get("include_strategies", [])  # 비워두면 전체
 
-def write_health(status: str):
-    memory = psutil.virtual_memory()
-    cpu = psutil.cpu_percent(interval=1)
-    save_json(HEALTH_FILE, {
-        "status": status,
-        "timestamp": datetime.now().isoformat(),
-        "cpu_percent": cpu,
-        "mem_percent": memory.percent
-    })
-
-def is_running():
-    return os.path.exists(LOCK_FILE)
-
-def create_lock():
-    with open(LOCK_FILE, "w") as f:
-        f.write(str(os.getpid()))
-
-def remove_lock():
-    if os.path.exists(LOCK_FILE):
-        os.remove(LOCK_FILE)
-
-def check_termination():
-    return os.path.exists(TERMINATE_FILE)
 
 def main_loop(interval_sec):
-    if is_running():
+    if termination_handler.is_running():
         logger.error("❗ 이미 실행 중입니다. 중복 실행 방지를 위해 종료합니다.")
         return
-    create_lock()
+
+    termination_handler.create_lock()
     logger.info("✅ 메인 스케줄러 시작됨.")
-    write_health("started")
+    termination_handler.write_health("started")
 
     entry_checker = EntrySignalChecker()
     exit_checker = ExitTrader()
 
     try:
         while True:
-            if check_termination():
+            if termination_handler.check_termination():
                 logger.warning("🛑 종료 플래그 발견. 루프를 종료합니다.")
                 break
 
@@ -104,7 +83,10 @@ def main_loop(interval_sec):
                     if ALERT_ENABLED:
                         send_alert("📄 리포트 생성 실패!", level="warning")
 
-                write_health("running")
+                # ✅ 전략 자본 비중 자동 계산 추가
+                allocate_capital_weights()
+
+                termination_handler.write_health("running")
                 logger.success(f"✅ 루프 완료. {interval_sec}초 후 재시작.")
                 time.sleep(interval_sec)
 
@@ -121,9 +103,10 @@ def main_loop(interval_sec):
         logger.warning("🛑 사용자 중단 요청 감지됨. 루프 종료 중...")
 
     finally:
-        write_health("stopped")
-        remove_lock()
+        termination_handler.write_health("stopped")
+        termination_handler.remove_lock()
         logger.info("🧹 종료 정리 완료. 시스템 종료됨.")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

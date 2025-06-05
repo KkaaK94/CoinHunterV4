@@ -30,5 +30,12 @@
   "enable_secure_json": false,
   "json_encryption_key": "",
 
-  "dashboard_mode": "dash"
+  "dashboard_mode": "dash",
+  "is_live_mode": true,
+
+  "weight_file_path": "data_io/json_store/capital_weights.json",
+  "capital_min_roi": 0.5,
+  "capital_top_n": 5
 }
+
+
