@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from loguru import logger
 from cryptography.fernet import Fernet
 
+
+
 # 📌 환경 변수 로딩
 load_dotenv()
 DATA_PATH = Path(os.getenv("DATA_PATH", "data_io/json_store"))

@@ -1,5 +1,16 @@
-{
-  "RSI": 0.71,
-  "MACD": 0.63,
-  "MA_Cross": 0.52
-}
+[
+  {
+    "strategy_name": "rsi_strategy",
+    "roi": 2.1,
+    "win_rate": 68,
+    "profit": 15300,
+    "total_count": 22
+  },
+  {
+    "strategy_name": "macd_strategy",
+    "roi": 1.3,
+    "win_rate": 61,
+    "profit": 9800,
+    "total_count": 18
+  }
+]

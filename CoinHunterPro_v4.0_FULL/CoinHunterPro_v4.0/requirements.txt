@@ -1,1 +1,2 @@
 jinja2
+loguru>=0.7.0
